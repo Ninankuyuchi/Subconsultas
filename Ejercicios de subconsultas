@@ -1,0 +1,72 @@
+-- pregunta 1
+select ShipCountry, count(OrderId) from Orders group by ShipCountry order by 2 desc limit 10;
+-- pregunta 2
+select ShipCountry, count(OrderId) from Orders 
+where 
+	ShipCountry not in (
+		select t0.ShipCountry from
+			(
+				select ShipCountry, count(OrderId) from Orders group by ShipCountry order by 2 desc limit 10
+			)t0
+)
+group by ShipCountry
+order by 2 desc;
+-- 3.	Mostrar una lista de los productos que provee la compañía 'Ma Maison', esta lista deberá mostrar lo siguiente:
+-- ID del producto, Nombre del producto, Nombre de la Categoría, Nombre del Proveedor, Precio Unitario y Unidades en Stock.
+
+select
+	p.ProductId, p.ProductName, c.CategoryName, s.CompanyName, p.UnitPrice, UnitsInStock
+from
+	products p
+	inner join suppliers s on p.SupplierId = s.SupplierId
+	inner join categories c on c.CategoryId = p.CategoryId
+where
+	s.CompanyName = 'Ma Maison';
+/*
+select 
+	e.EmployeeId,
+	e.FirstName,
+	e.LastName,
+	o.OrderId,
+	
+from 
+	employees e
+	inner join orders o on o.EmployeeId = e.EmployeeId
+	inner join order_details od on od.OrderId = o.OrderId;*/
+
+-- 4.	Mostrar un reporte donde se listen los nombres de los empleados, el monto de ventas que realizo cada mes del año 1997 y el total de dicho año. 
+-- Nombre Empleado    S/. Enero    S/. Febrero    S/.Marzo    ….            Total
+
+select 
+	e.LastName,	e.FirstName,
+	round(sum((case when t0.mes = 1 then t0.total else 0 end)),2) 'Enero',
+	round(sum((case when t0.mes = 2 then t0.total else 0 end)),2) 'Febrero',
+	round(sum((case when t0.mes = 3 then t0.total else 0 end)),2) 'Marzo',
+	round(sum((case when t0.mes = 4 then t0.total else 0 end)),2) 'Abril',
+	round(sum((case when t0.mes = 5 then t0.total else 0 end)),2) 'Mayo',
+	round(sum((case when t0.mes = 6 then t0.total else 0 end)),2) 'Junio',
+	round(sum((case when t0.mes = 7 then t0.total else 0 end)),2) 'Julio',
+	round(sum((case when t0.mes = 8 then t0.total else 0 end)),2) 'Agosto',
+	round(sum((case when t0.mes = 9 then t0.total else 0 end)),2) 'Setiembre',
+	round(sum((case when t0.mes = 10 then t0.total else 0 end)),2) 'Octubre',
+	round(sum((case when t0.mes = 11 then t0.total else 0 end)),2) 'Noviembre',
+	round(sum((case when t0.mes = 12 then t0.total else 0 end)),2) 'Diciembre',
+	round(sum(t0.total),2) 'Total'
+from
+	employees e
+	inner join
+(
+	select
+		o.orderId,
+		o.EmployeeId,
+		month(orderDate) 'mes', 
+		year(orderDate) 'anio', 
+		sum(od.unitPrice*od.Quantity - od.discount) 'total'
+	from
+		orders o 
+		inner join order_details od on od.OrderId = o.OrderId
+	group by o.Orderid, o.EmployeeId, month(orderDate), year(orderDate)
+)t0 on e.EmployeeId = t0.EmployeeId
+where
+	t0.anio = 1997
+group by e.LastName,	e.FirstName;
